@@ -1,0 +1,16 @@
+{
+  "name": "tog_gj_claim",
+  "version": "1.0.0",
+  "description": "Automatically claim code-based rewards for the mobile game Tower of God : Great Journey",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Eldras",
+  "license": "unlicense",
+  "dependencies": {
+    "discord.js": "^14.11.0",
+    "dotenv": "^16.0.3",
+    "mongodb": "^5.5.0"
+  }
+}
