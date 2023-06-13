@@ -9,9 +9,9 @@
   "author": "Eldras",
   "license": "unlicense",
   "dependencies": {
+    "axios": "^1.4.0",
     "discord.js": "^14.11.0",
     "dotenv": "^16.0.3",
-    "mongodb": "^5.5.0",
-    "node-fetch": "^3.3.1"
+    "mongodb": "^5.5.0"
   }
 }

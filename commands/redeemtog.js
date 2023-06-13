@@ -1,5 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const fs = require('fs');
+const axios = require('axios');
+const https = require('https');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -53,7 +55,6 @@ module.exports = {
 
     // Get the list of all users ID on the server
     const users = await interaction.guild.members.fetch().then(members => members.map(member => member.user));
-    console.log(users);
 
     // Find all the codes for the users
     const results = await collection.find({ userId: { $in: users.map(user => user.id) } }).toArray();
@@ -97,25 +98,15 @@ module.exports = {
 // define function to send POST request to ToG API
 function sendPostRequest(requestBody) {
   return new Promise((resolve, reject) => {
-    const fetch = require('node-fetch');
-    const https = require('https');
-
-    // Désactiver la vérification du certificat SSL
-    const agent = new https.Agent({
-      rejectUnauthorized: false
-    });
-
     const url = 'https://global-tog-info.ngelgames.com/api/useCoupon';
 
     console.log('BODY : ' + JSON.stringify(requestBody));
-    fetch(url, {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
+    axios.post(url, requestBody, {
       headers: { 'Content-Type': 'application/json' },
-      agent: agent // Utiliser l'agent HTTPS personnalisé
+      httpsAgent: new https.Agent({ rejectUnauthorized: false })
     })
-      .then(response => response.json())
-      .then(data => {
+      .then(response => {
+        const data = response.data;
         console.log('DATA : ' + JSON.stringify(data));
         // data -> { result: bool, responseType: int }
         const result = data.result;
