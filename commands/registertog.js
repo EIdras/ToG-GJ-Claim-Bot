@@ -9,32 +9,9 @@ module.exports = {
         .setName('togid')
         .setDescription('Your Tower of God: Great Journey account ID.')
         .setRequired(true)
-    )
-    .addStringOption(option =>
-      option
-        .setName('discordid')
-        .setDescription('To register an account ID for another user, specify their Discord ID.')
-        .setRequired(false)
     ),
   async execute(interaction, mongoClient) {
-    const discordId = interaction.options.getString('discordid');
-    let user;
-
-    if (discordId) {
-      // Check if the discord ID of the user is VALID
-      if (!/^\d+$/.test(discordId)) {
-        await interaction.reply({ content: 'The given Discord ID is invalid. Please try again.', ephemeral: true });
-        return;
-      }
-      user = await interaction.client.users.fetch(discordId);
-      if (!user) {
-        await interaction.reply({ content: 'User was not found using the given Discord ID. Please try again.', ephemeral: true });
-        return;
-      }
-    } else {
-      user = interaction.user;
-    }
-
+    const user = interaction.user;
     const togId = interaction.options.getString('togid');
     if (!togId) {
       await interaction.reply('An error occurred while executing this command.');
@@ -59,7 +36,7 @@ module.exports = {
 
       // Check if the togid is the same as the one already registered
       if (existingUser.togId === togId) {
-        await interaction.reply({ content: 'This ToG account ID has been registered already.', ephemeral: true });
+        await interaction.reply({ content: 'You have already registered this ToG account ID.', ephemeral: true });
         return;
       }
 
@@ -76,7 +53,7 @@ module.exports = {
       const row = new ActionRowBuilder()
 			.addComponents(cancel, confirm);
 
-      await interaction.reply({ content: `This ToG account ID (${user.tag}) is already registered. Would you like to replace it ?\n\`${existingUser.togId +'\` -> \`' + togId + '\`'}`, components: [row], ephemeral: true });
+      await interaction.reply({ content: 'You have already registered a ToG account ID. Would you like to replace it ?\n\`' + existingUser.togId +'\` -> \`' + togId + '\`', components: [row], ephemeral: true});
 
       const filter = i => i.user.id === user.id;
       const collector = interaction.channel.createMessageComponentCollector({ filter, time: 15000 });
@@ -86,9 +63,9 @@ module.exports = {
           // Replace the togId in the collection
           await collection.updateOne({ userId: user.id }, { $set: { togId: togId } });
 
-          await interaction.editReply(`This ToG account ID (${user.tag}) has been replaced successfully.`);
+          await interaction.editReply('Your ToG account ID has been replaced successfully.');
         } else if (i.customId === 'cancel') {
-          await interaction.editReply(`This ToG account ID (${user.tag}) has not been replaced.`);
+          await interaction.editReply('Your ToG account ID has not been replaced.');
         }
         collector.stop();
       });
@@ -105,7 +82,7 @@ module.exports = {
       // Insert the togId into the collection
       await collection.insertOne({ userId: user.id, togId: togId });
 
-      await interaction.reply(`This ToG account ID (${user.tag}) has been registered successfully.`);
+      await interaction.reply('Your ToG account ID has been registered successfully.');
       console.log(`Registered ${user.tag}'s ToG account ID as ${togId}`);
     }
   },

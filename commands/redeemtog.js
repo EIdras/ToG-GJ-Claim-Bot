@@ -18,12 +18,6 @@ module.exports = {
         .setName('server')
         .setDescription('Whether to redeem the code for all the server members or not (just you).')
         .setRequired(false)
-    )
-    .addBooleanOption(option =>
-      option
-        .setName('database')
-        .setDescription('If set to true, will redeem the code for all users in the database.')
-        .setRequired(false)
     ),
   async execute(interaction, mongoClient) {
 
@@ -33,8 +27,6 @@ module.exports = {
     
     // Get the code to redeem
     const code = interaction.options.getString('code');
-    // Get the database option
-    const database = interaction.options.getBoolean('database') ?? false;
     // Get the server option
     const server = interaction.options.getBoolean('server') ?? false;
 
@@ -44,7 +36,7 @@ module.exports = {
       return;
     }
 
-    if (server === false && database === false) {
+    if (server === false) {
       // Check if the user has already registered a togId
       const existingUser = await collection.findOne({ userId: interaction.user.id });
 
@@ -64,38 +56,31 @@ module.exports = {
     // Get the list of all users ID on the server
     const users = await interaction.guild.members.fetch().then(members => members.map(member => member.user));
 
-    let results = [];
     // Find all the codes for the users
-    if (database) {
-      results = await collection.find().toArray();
-    } else {
-      results = await collection.find({ userId: { $in: users.map(user => user.id) } }).toArray();
-    }
+    const results = await collection.find({ userId: { $in: users.map(user => user.id) } }).toArray();
 
     // Check if there are any results
-    if (results?.length === 0) {
+    if (results.length === 0) {
       await interaction.reply({ content: 'No user has registered a ToG account ID yet.'});
       return;
     }
 
     const nbUsers = results.length;
-    console.log(results);
 
     // Redeem the code for each user on the server
-    console.log(`Redeeming code for all users on the ${database ? 'database' : 'server'} :`);
-    await interaction.reply({ content: `Redeeming code for all users (${nbUsers}) on the ${database ? 'database' : 'server'} . . .`});
+    console.log('Redeeming code for all users on the server:');
+    await interaction.reply({ content: 'Redeeming code for all users (' + nbUsers + ') on the server . . .'});
 
     const responses = [];
     for (const result of results) {
       const togId = result.togId;
       const message = await sendPostRequest({ server: '', accountID: togId, nickname: '', couponNumber: code });
-      const discordUser = users.find(user => user.id === result.userId) || await interaction.client.users.fetch(result.userId);
-      const response = `${discordUser.tag} (${togId}) -> *${message}*`;
+      const response = `${users.find(user => user.id === result.userId).tag} (${togId}) -> *${message}*`;
       responses.push(response);
       console.log(` - ${response}`);
     }
 
-    await interaction.editReply({ content:`**Redeem finished for all users (' + nbUsers + ') on the ${database ? 'database' : 'server'} !**\nReport :\n${responses.join('\n')}` });
+    await interaction.editReply({ content:'**Redeem finished for all users (' + nbUsers + ') on the server !**\nReport :\n' + responses.join('\n') });
 
     let replyContent = `**Redeem finished for all users (${nbUsers}) on the server !**`;
 
